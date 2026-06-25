@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import TaskForm from "./components/TaskForm.vue";
 import TaskList from "./components/TaskList.vue";
 import type { Task, TaskFilter } from "./types.ts";
@@ -39,6 +39,15 @@ import FilterButton from "./components/FilterButton.vue";
 const message = ref("Tasks App");
 const tasks = ref<Task[]>([]);
 const filter = ref<TaskFilter>("all");
+
+onMounted(() => {
+  const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
+  if (savedTasks) {
+    tasks.value = savedTasks;
+  }
+  console.log(savedTasks);
+});
 
 const totalDone = computed(() =>
   tasks.value.reduce((total, task) => (task.done ? total + 1 : total), 0),
@@ -53,8 +62,6 @@ const filteredTasked = computed(() => {
     case "todo":
       return tasks.value.filter((task) => !task.done);
   }
-
-  return tasks.value;
 });
 
 const addTask = (newTask: string) => {
@@ -63,6 +70,8 @@ const addTask = (newTask: string) => {
     title: newTask,
     done: false,
   });
+
+  saveTaskToLocalStorage();
 };
 
 const toggleDone = (id: string) => {
@@ -71,6 +80,8 @@ const toggleDone = (id: string) => {
   if (task) {
     task.done = !task.done;
   }
+
+  saveTaskToLocalStorage();
 };
 
 const removeTask = (id: string) => {
@@ -78,10 +89,17 @@ const removeTask = (id: string) => {
   if (index !== -1) {
     tasks.value.splice(index, 1);
   }
+
+  saveTaskToLocalStorage();
 };
 
 const setFilter = (value: TaskFilter) => {
   filter.value = value;
+};
+
+const saveTaskToLocalStorage = () => {
+  localStorage.setItem("tasks", JSON.stringify(tasks.value));
+  console.log(tasks.value);
 };
 </script>
 
